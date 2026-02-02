@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const slides = [
   {
     icon: Sparkles,
-    title: "Welcome to FocusFlow",
+    title: "Welcome to FocusNest",
     description: "Your friendly companion for building healthy digital habits and improving focus.",
     gradient: "gradient-primary",
   },

@@ -126,7 +126,7 @@ const ProfilePage = () => {
         </motion.button>
 
         <p className="text-center text-xs text-muted-foreground">
-          FocusFlow v1.0.0
+          FocusNest v1.0.0
         </p>
       </main>
 
