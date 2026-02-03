@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, Sun, Moon } from "lucide-react";
+import { Bell, Sun, Moon, ShieldCheck, ShieldAlert, Shield } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ScreenTimeCard from "@/components/ScreenTimeCard";
 import StreakCard from "@/components/StreakCard";
@@ -7,6 +7,8 @@ import QuickActions from "@/components/QuickActions";
 import MotivationalQuote from "@/components/MotivationalQuote";
 import WeeklyChart from "@/components/WeeklyChart";
 import { useState } from "react";
+import { useFaceDetection } from "@/contexts/FaceDetectionContext";
+import { Link } from "react-router-dom";
 
 const weeklyData = [
   { day: "Mon", minutes: 180, goal: 240 },
@@ -20,6 +22,7 @@ const weeklyData = [
 
 const Dashboard = () => {
   const [isDark, setIsDark] = useState(false);
+  const { isChild, isCameraActive } = useFaceDetection();
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
 
@@ -42,6 +45,30 @@ const Dashboard = () => {
             <h1 className="text-xl font-bold text-foreground">Ready to focus?</h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Face Detection Status */}
+            <Link to="/profile">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  isCameraActive 
+                    ? isChild 
+                      ? "bg-warning/20" 
+                      : "bg-success/20"
+                    : "bg-secondary"
+                }`}
+              >
+                {isCameraActive ? (
+                  isChild ? (
+                    <ShieldAlert className="w-5 h-5 text-warning" />
+                  ) : (
+                    <ShieldCheck className="w-5 h-5 text-success" />
+                  )
+                ) : (
+                  <Shield className="w-5 h-5 text-secondary-foreground" />
+                )}
+              </motion.button>
+            </Link>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
