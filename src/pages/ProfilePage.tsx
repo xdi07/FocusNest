@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Settings, Bell, Moon, Shield, HelpCircle, LogOut, ChevronRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import FaceDetectionControl from "@/components/FaceDetectionControl";
+import BlurredContent from "@/components/BlurredContent";
 
 const menuItems = [
   { icon: Bell, label: "Notifications", description: "Manage reminders" },
@@ -21,7 +23,7 @@ const ProfilePage = () => {
         className="sticky top-0 z-40 glass border-b border-border/50"
       >
         <div className="flex items-center justify-between p-4 max-w-md mx-auto">
-          <Link to="/">
+          <Link to="/dashboard">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -70,6 +72,9 @@ const ProfilePage = () => {
           </div>
         </motion.div>
 
+        {/* Face Detection Control */}
+        <FaceDetectionControl />
+
         {/* Premium Banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -84,46 +89,50 @@ const ProfilePage = () => {
           </p>
         </motion.div>
 
-        {/* Menu Items */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden"
-        >
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <motion.button
-                key={item.label}
-                whileHover={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
-                className="w-full flex items-center gap-4 p-4 text-left border-b border-border last:border-b-0"
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-secondary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </motion.button>
-            );
-          })}
-        </motion.div>
+        {/* Menu Items - Protected for children */}
+        <BlurredContent>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden"
+          >
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <motion.button
+                  key={item.label}
+                  whileHover={{ backgroundColor: "hsl(var(--muted) / 0.5)" }}
+                  className="w-full flex items-center gap-4 p-4 text-left border-b border-border last:border-b-0"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-secondary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        </BlurredContent>
 
-        {/* Logout */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-destructive/10 text-destructive font-semibold"
-        >
-          <LogOut className="w-5 h-5" />
-          Log Out
-        </motion.button>
+        {/* Logout - Protected for children */}
+        <BlurredContent>
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-destructive/10 text-destructive font-semibold"
+          >
+            <LogOut className="w-5 h-5" />
+            Log Out
+          </motion.button>
+        </BlurredContent>
 
         <p className="text-center text-xs text-muted-foreground">
           FocusNest v1.0.0
