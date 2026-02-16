@@ -39,7 +39,7 @@ const StatsPage = () => {
         className="sticky top-0 z-40 glass border-b border-border/50"
       >
         <div className="flex items-center justify-between p-4 max-w-md mx-auto">
-          <Link to="/">
+          <Link to="/dashboard">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

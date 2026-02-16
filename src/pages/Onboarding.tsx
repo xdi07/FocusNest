@@ -39,7 +39,7 @@ const Onboarding = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      navigate("/dashboard");
+      navigate("/auth");
     }
   };
 
@@ -62,7 +62,7 @@ const Onboarding = () => {
       >
         <Button
           variant="ghost"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/auth")}
           className="text-muted-foreground font-semibold"
         >
           Skip

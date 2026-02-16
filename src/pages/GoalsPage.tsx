@@ -1,65 +1,86 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Target, Calendar, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Calendar, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-const challenges = [
-  {
-    id: 1,
-    title: "7-Day Digital Detox",
-    description: "Reduce screen time by 30% for a week",
-    duration: "7 days",
-    progress: 71,
-    daysComplete: 5,
-    reward: 100,
-    active: true,
-  },
-  {
-    id: 2,
-    title: "Focus Master",
-    description: "Complete 10 focus sessions",
-    duration: "No limit",
-    progress: 60,
-    daysComplete: 6,
-    reward: 50,
-    active: true,
-  },
-  {
-    id: 3,
-    title: "30-Day Challenge",
-    description: "Stay under your daily goal for 30 days",
-    duration: "30 days",
-    progress: 0,
-    daysComplete: 0,
-    reward: 500,
-    active: false,
-  },
-];
-
-const dailyGoals = [
-  { id: 1, title: "Complete 2 focus sessions", completed: true },
-  { id: 2, title: "Stay under 4 hours screen time", completed: true },
-  { id: 3, title: "Take 3 healthy breaks", completed: false },
-  { id: 4, title: "No phone after 10 PM", completed: false },
-];
+interface Goal {
+  id: string;
+  title: string;
+  description: string | null;
+  target_minutes: number;
+  completed: boolean;
+  due_date: string | null;
+  created_at: string;
+}
 
 const GoalsPage = () => {
+  const { user } = useAuth();
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchGoals = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("goals")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (data) setGoals(data as Goal[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchGoals();
+  }, [user]);
+
+  const addGoal = async () => {
+    if (!user || !newTitle.trim()) return;
+    const { error } = await supabase.from("goals").insert({
+      user_id: user.id,
+      title: newTitle.trim(),
+      description: newDescription.trim() || null,
+      target_minutes: 60,
+    });
+    if (error) {
+      toast.error("Failed to add goal");
+    } else {
+      toast.success("Goal added!");
+      setNewTitle("");
+      setNewDescription("");
+      setShowAddDialog(false);
+      fetchGoals();
+    }
+  };
+
+  const toggleGoal = async (goal: Goal) => {
+    await supabase.from("goals").update({ completed: !goal.completed }).eq("id", goal.id);
+    fetchGoals();
+    toast.success(goal.completed ? "Goal reopened" : "Goal completed! 🎉");
+  };
+
+  const deleteGoal = async (id: string) => {
+    await supabase.from("goals").delete().eq("id", id);
+    fetchGoals();
+    toast.success("Goal removed");
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 glass border-b border-border/50"
-      >
+      <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="sticky top-0 z-40 glass border-b border-border/50">
         <div className="flex items-center justify-between p-4 max-w-md mx-auto">
-          <Link to="/">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"
-            >
+          <Link to="/dashboard">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
               <ArrowLeft className="w-5 h-5 text-secondary-foreground" />
             </motion.div>
           </Link>
@@ -68,127 +89,94 @@ const GoalsPage = () => {
         </div>
       </motion.header>
 
-      {/* Main Content */}
       <main className="px-4 py-6 max-w-md mx-auto space-y-6">
-        {/* Daily Goals */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="w-5 h-5 text-primary" />
-            <h2 className="text-base font-bold text-foreground">Today's Goals</h2>
+        {/* Your Goals */}
+        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              <h2 className="text-base font-bold text-foreground">Your Goals</h2>
+            </div>
+            <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setShowAddDialog(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Add
+            </Button>
           </div>
           <div className="bg-card rounded-2xl p-4 shadow-card border border-border/50 space-y-3">
-            {dailyGoals.map((goal, index) => (
-              <motion.div
-                key={goal.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                    goal.completed
-                      ? "gradient-success"
-                      : "bg-secondary border-2 border-border"
-                  }`}
+            {loading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+            ) : goals.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No goals yet. Add your first goal!</p>
+            ) : (
+              goals.map((goal, index) => (
+                <motion.div
+                  key={goal.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-3"
                 >
-                  {goal.completed && (
-                    <CheckCircle2 className="w-4 h-4 text-success-foreground" />
-                  )}
-                </div>
-                <span
-                  className={`text-sm font-medium ${
-                    goal.completed
-                      ? "text-muted-foreground line-through"
-                      : "text-foreground"
-                  }`}
-                >
-                  {goal.title}
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* Active Challenges */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy className="w-5 h-5 text-warning" />
-            <h2 className="text-base font-bold text-foreground">Challenges</h2>
-          </div>
-          <div className="space-y-3">
-            {challenges.map((challenge, index) => (
-              <motion.div
-                key={challenge.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                whileHover={{ scale: 1.01 }}
-                className={`bg-card rounded-2xl p-5 shadow-card border transition-all ${
-                  challenge.active
-                    ? "border-primary/30"
-                    : "border-border/50 opacity-70"
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-foreground">{challenge.title}</h3>
-                      {challenge.active && (
-                        <span className="px-2 py-0.5 text-xs font-semibold gradient-primary text-primary-foreground rounded-full">
-                          Active
-                        </span>
-                      )}
+                  <button onClick={() => toggleGoal(goal)}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      goal.completed ? "gradient-success" : "bg-secondary border-2 border-border"
+                    }`}>
+                      {goal.completed && <CheckCircle2 className="w-4 h-4 text-success-foreground" />}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {challenge.description}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Reward</p>
-                    <p className="font-bold text-warning">🏆 {challenge.reward}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {challenge.duration}
+                  </button>
+                  <div className="flex-1">
+                    <span className={`text-sm font-medium ${goal.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {goal.title}
                     </span>
-                    <span className="font-semibold text-foreground">
-                      {challenge.progress}%
-                    </span>
+                    {goal.description && <p className="text-xs text-muted-foreground">{goal.description}</p>}
                   </div>
-                  <Progress 
-                    value={challenge.progress} 
-                    className="h-2 [&>div]:gradient-success"
-                  />
-                </div>
-              </motion.div>
-            ))}
+                  <button onClick={() => deleteGoal(goal.id)} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.section>
 
-        {/* Start New Challenge CTA */}
+        {/* Add Goal Button */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.3 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={() => setShowAddDialog(true)}
           className="w-full py-4 rounded-2xl border-2 border-dashed border-primary/30 text-primary font-semibold hover:bg-primary/5 transition-colors"
         >
-          + Start a New Challenge
+          + Add a New Goal
         </motion.button>
       </main>
+
+      {/* Add Goal Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>New Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <Input
+              placeholder="Goal title"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="h-12 rounded-xl"
+              onKeyDown={(e) => e.key === "Enter" && addGoal()}
+            />
+            <Input
+              placeholder="Description (optional)"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              className="h-12 rounded-xl"
+            />
+            <Button onClick={addGoal} className="w-full h-12 rounded-xl gradient-primary font-bold" disabled={!newTitle.trim()}>
+              Add Goal
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
