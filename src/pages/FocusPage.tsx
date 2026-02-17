@@ -52,7 +52,7 @@ const FocusPage = () => {
               <ArrowLeft className="w-5 h-5 text-secondary-foreground" />
             </motion.div>
           </Link>
-          <h1 className="text-lg font-bold text-foreground">Focus Mode</h1>
+          <h1 className="text-lg font-bold text-primary">FocusNest</h1>
           <Link to="/profile">
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
               <Settings className="w-5 h-5 text-secondary-foreground" />

@@ -42,7 +42,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between p-4 max-w-md mx-auto">
           <div>
             <p className="text-sm text-muted-foreground font-medium">{greeting}, {profile?.display_name || "Explorer"}!</p>
-            <h1 className="text-xl font-bold text-foreground">Ready to focus?</h1>
+            <h1 className="text-xl font-bold text-foreground">FocusNest</h1>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/profile">

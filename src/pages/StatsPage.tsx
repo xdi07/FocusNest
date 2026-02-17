@@ -48,7 +48,7 @@ const StatsPage = () => {
               <ArrowLeft className="w-5 h-5 text-secondary-foreground" />
             </motion.div>
           </Link>
-          <h1 className="text-lg font-bold text-foreground">Your Progress</h1>
+          <h1 className="text-lg font-bold text-primary">FocusNest</h1>
           <div className="w-10" />
         </div>
       </motion.header>
