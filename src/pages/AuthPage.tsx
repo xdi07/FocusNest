@@ -50,6 +50,14 @@ const AuthPage = () => {
         <Brain className="w-10 h-10 text-primary-foreground" />
       </motion.div>
 
+      <motion.h2
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="text-lg font-bold text-primary mb-1"
+      >
+        FocusNest
+      </motion.h2>
       <motion.h1
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
