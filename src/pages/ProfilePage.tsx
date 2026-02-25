@@ -180,6 +180,18 @@ const ProfilePage = () => {
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
 
+            {/* Login Attempts */}
+            <Link to="/login-attempts" className="w-full flex items-center gap-4 p-4 border-b border-border text-left hover:bg-muted/50 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                <Shield className="w-5 h-5 text-secondary-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">Login Attempts</p>
+                <p className="text-xs text-muted-foreground">View all login activity</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </Link>
+
             {/* Help */}
             <button onClick={() => setActiveDialog("help")} className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors">
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
