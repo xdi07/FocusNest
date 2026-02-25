@@ -4,6 +4,7 @@ import { Brain, Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -17,6 +18,18 @@ const AuthPage = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
+  const logAttempt = async (attemptEmail: string, success: boolean) => {
+    try {
+      await supabase.from("login_attempts").insert({
+        email: attemptEmail,
+        success,
+        user_agent: navigator.userAgent,
+      });
+    } catch (err) {
+      console.error("Failed to log attempt", err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,15 +37,19 @@ const AuthPage = () => {
     if (isSignUp) {
       const { error } = await signUp(email, password, displayName);
       if (error) {
+        await logAttempt(email, false);
         toast.error(error.message);
       } else {
+        await logAttempt(email, true);
         toast.success("Check your email to verify your account!");
       }
     } else {
       const { error } = await signIn(email, password);
       if (error) {
+        await logAttempt(email, false);
         toast.error(error.message);
       } else {
+        await logAttempt(email, true);
         navigate("/dashboard");
       }
     }

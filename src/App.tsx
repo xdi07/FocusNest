@@ -13,6 +13,7 @@ import GoalsPage from "./pages/GoalsPage";
 import StatsPage from "./pages/StatsPage";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
+import LoginAttemptsPage from "./pages/LoginAttemptsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
               <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/login-attempts" element={<ProtectedRoute><LoginAttemptsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </FaceDetectionProvider>
