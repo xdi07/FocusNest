@@ -34,24 +34,29 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp) {
-      const { error } = await signUp(email, password, displayName);
-      if (error) {
-        await logAttempt(email, false);
-        toast.error(error.message);
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, displayName);
+        if (error) {
+          await logAttempt(email, false);
+          toast.error(error.message);
+        } else {
+          await logAttempt(email, true);
+          toast.success("Check your email to verify your account!");
+        }
       } else {
-        await logAttempt(email, true);
-        toast.success("Check your email to verify your account!");
+        const { error } = await signIn(email, password);
+        if (error) {
+          await logAttempt(email, false);
+          toast.error(error.message);
+        } else {
+          await logAttempt(email, true);
+          navigate("/dashboard");
+        }
       }
-    } else {
-      const { error } = await signIn(email, password);
-      if (error) {
-        await logAttempt(email, false);
-        toast.error(error.message);
-      } else {
-        await logAttempt(email, true);
-        navigate("/dashboard");
-      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      toast.error("Network error. Please check your connection and try again.");
     }
     setLoading(false);
   };
