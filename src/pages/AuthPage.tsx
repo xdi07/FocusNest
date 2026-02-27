@@ -34,9 +34,18 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    const withTimeout = async <T,>(promise: Promise<T>, ms = 12000): Promise<T> => {
+      return await Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timed out. Please try again.")), ms)
+        ),
+      ]);
+    };
+
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password, displayName);
+        const { error } = await withTimeout(signUp(email, password, displayName));
         if (error) {
           await logAttempt(email, false);
           toast.error(error.message);
@@ -45,7 +54,7 @@ const AuthPage = () => {
           toast.success("Check your email to verify your account!");
         }
       } else {
-        const { error } = await signIn(email, password);
+        const { error } = await withTimeout(signIn(email, password));
         if (error) {
           await logAttempt(email, false);
           toast.error(error.message);
@@ -56,9 +65,10 @@ const AuthPage = () => {
       }
     } catch (err) {
       console.error("Auth error:", err);
-      toast.error("Network error. Please check your connection and try again.");
+      toast.error(err instanceof Error ? err.message : "Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
