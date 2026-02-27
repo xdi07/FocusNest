@@ -104,8 +104,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const withTimeout = async <T,>(promise: Promise<T>, ms = 10000): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timed out. Please try again.")), ms)
+        ),
+      ]);
+
+    const attemptSignIn = async () => {
+      const { error } = await withTimeout(supabase.auth.signInWithPassword({ email, password }));
+      return { error };
+    };
+
+    try {
+      return await attemptSignIn();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to sign in";
+      const isNetworkIssue = /fetch|network|timed out/i.test(message);
+
+      if (!isNetworkIssue) return { error: err };
+
+      // Clear potentially stale auth token and retry once
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith("sb-") && key.endsWith("-auth-token"))
+        .forEach((key) => localStorage.removeItem(key));
+
+      try {
+        return await attemptSignIn();
+      } catch (retryErr) {
+        return { error: retryErr };
+      }
+    }
   };
 
   const signOut = async () => {
