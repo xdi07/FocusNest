@@ -21,6 +21,10 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminLogins from "./pages/admin/AdminLogins";
 import AdminSessions from "./pages/admin/AdminSessions";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,9 +49,13 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLoginPage />} />
               <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                 <Route index element={<AdminOverview />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="users/:userId" element={<AdminUserDetail />} />
                 <Route path="logins" element={<AdminLogins />} />
                 <Route path="sessions" element={<AdminSessions />} />
+                <Route path="announcements" element={<AdminAnnouncements />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
