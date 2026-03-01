@@ -7,6 +7,7 @@ import { FaceDetectionProvider } from "@/contexts/FaceDetectionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import AdminLayout from "@/layouts/AdminLayout";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import FocusPage from "./pages/FocusPage";
@@ -16,7 +17,10 @@ import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 import LoginAttemptsPage from "./pages/LoginAttemptsPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminLogins from "./pages/admin/AdminLogins";
+import AdminSessions from "./pages/admin/AdminSessions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,7 +43,12 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/login-attempts" element={<ProtectedRoute><LoginAttemptsPage /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                <Route index element={<AdminOverview />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="logins" element={<AdminLogins />} />
+                <Route path="sessions" element={<AdminSessions />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </FaceDetectionProvider>
