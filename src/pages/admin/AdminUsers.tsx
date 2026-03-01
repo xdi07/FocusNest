@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: string;
@@ -13,6 +14,7 @@ interface UserProfile {
 const AdminUsers = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.from("profiles").select("id, display_name, role, created_at").order("created_at", { ascending: false }).then(({ data }) => {
@@ -30,7 +32,14 @@ const AdminUsers = () => {
       <h2 className="text-2xl font-bold text-foreground">Users ({users.length})</h2>
       <div className="space-y-2">
         {users.map((u, i) => (
-          <motion.div key={u.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }} className="bg-card rounded-2xl p-4 border border-border/50 flex items-center gap-3">
+          <motion.div
+            key={u.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.02 }}
+            onClick={() => navigate(`/admin/users/${u.id}`)}
+            className="bg-card rounded-2xl p-4 border border-border/50 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
+          >
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Users className="w-5 h-5 text-primary" />
             </div>
