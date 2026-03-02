@@ -34,6 +34,11 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      toast.error("Connection timed out. Please try again.");
+    }, 15000);
+
     try {
       if (isSignUp) {
         const { error } = await signUp(email, password, displayName);
@@ -58,6 +63,7 @@ const AuthPage = () => {
       console.error("Auth error:", err);
       toast.error(err instanceof Error ? err.message : "Network error. Please check your connection and try again.");
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   };
