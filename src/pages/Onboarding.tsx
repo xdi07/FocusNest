@@ -114,7 +114,7 @@ const Onboarding = () => {
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-4 mb-4">
         {/* Dots */}
         <div className="flex justify-center gap-2">
           {slides.map((_, index) => (
@@ -157,7 +157,7 @@ const Onboarding = () => {
           >
             <Button
               onClick={nextSlide}
-              className="w-full h-14 rounded-2xl gradient-primary text-lg font-bold shadow-glow"
+              className="w-full h-11 rounded-xl gradient-primary text-base font-bold shadow-glow"
             >
               {currentSlide === slides.length - 1 ? (
                 "Get Started"
