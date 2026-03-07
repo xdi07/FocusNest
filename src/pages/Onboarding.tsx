@@ -114,7 +114,7 @@ const Onboarding = () => {
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-4 mb-4">
         {/* Dots */}
         <div className="flex justify-center gap-2">
           {slides.map((_, index) => (
