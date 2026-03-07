@@ -157,7 +157,7 @@ const Onboarding = () => {
           >
             <Button
               onClick={nextSlide}
-              className="w-full h-14 rounded-2xl gradient-primary text-lg font-bold shadow-glow"
+              className="w-full h-11 rounded-xl gradient-primary text-base font-bold shadow-glow"
             >
               {currentSlide === slides.length - 1 ? (
                 "Get Started"
