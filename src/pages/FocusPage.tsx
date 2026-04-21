@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const focusModes = [
   { label: "Quick", minutes: 10 },
-   { label: "Focus", minutes: 60 },
+    { label: "Focus", minutes: 25 },
    { label: "Deep", minutes: 60 },
   { label: "Custom", minutes: 0 },
 ];
