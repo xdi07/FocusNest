@@ -1,15 +1,15 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Target, Calendar, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Trophy, Target, CheckCircle2, Plus, Trash2, Clock3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { aggregateUserAnalytics, createEmptyUserAnalytics, formatMinutes } from "@/lib/analytics";
 
 interface Goal {
   id: string;
@@ -27,16 +27,31 @@ const GoalsPage = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [targetMinutes, setTargetMinutes] = useState("60");
   const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState(() => createEmptyUserAnalytics());
 
   const fetchGoals = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("goals")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (data) setGoals(data as Goal[]);
+    if (!user) {
+      setGoals([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const [goalsRes, sessionsRes] = await Promise.all([
+      supabase.from("goals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("focus_sessions").select("created_at, duration, completed").order("created_at", { ascending: false }),
+    ]);
+
+    if (goalsRes.error) {
+      toast.error(goalsRes.error.message);
+    } else {
+      const fetchedGoals = (goalsRes.data || []) as Goal[];
+      setGoals(fetchedGoals);
+      setAnalytics(aggregateUserAnalytics(sessionsRes.data || [], fetchedGoals, 240));
+    }
+
     setLoading(false);
   };
 
@@ -46,34 +61,49 @@ const GoalsPage = () => {
 
   const addGoal = async () => {
     if (!user || !newTitle.trim()) return;
+    const parsedTarget = Number.parseInt(targetMinutes, 10);
     const { error } = await supabase.from("goals").insert({
       user_id: user.id,
       title: newTitle.trim(),
       description: newDescription.trim() || null,
-      target_minutes: 60,
+      target_minutes: Number.isFinite(parsedTarget) && parsedTarget > 0 ? parsedTarget : 60,
     });
     if (error) {
-      toast.error("Failed to add goal");
+      toast.error(error.message);
     } else {
       toast.success("Goal added!");
       setNewTitle("");
       setNewDescription("");
+      setTargetMinutes("60");
       setShowAddDialog(false);
-      fetchGoals();
+      await fetchGoals();
     }
   };
 
   const toggleGoal = async (goal: Goal) => {
-    await supabase.from("goals").update({ completed: !goal.completed }).eq("id", goal.id);
-    fetchGoals();
+    const { error } = await supabase.from("goals").update({ completed: !goal.completed }).eq("id", goal.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await fetchGoals();
     toast.success(goal.completed ? "Goal reopened" : "Goal completed! 🎉");
   };
 
   const deleteGoal = async (id: string) => {
-    await supabase.from("goals").delete().eq("id", id);
-    fetchGoals();
+    const { error } = await supabase.from("goals").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await fetchGoals();
     toast.success("Goal removed");
   };
+
+  const goalSummary = useMemo(() => ({
+    completed: goals.filter((goal) => goal.completed).length,
+    pending: goals.filter((goal) => !goal.completed).length,
+  }), [goals]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -90,6 +120,24 @@ const GoalsPage = () => {
       </motion.header>
 
       <main className="px-4 py-6 max-w-md mx-auto space-y-6">
+        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Trophy className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{goalSummary.completed}</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
+          </div>
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Target className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{goalSummary.pending}</p>
+            <p className="text-xs text-muted-foreground">Pending</p>
+          </div>
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Clock3 className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{formatMinutes(analytics.totalMinutes)}</p>
+            <p className="text-xs text-muted-foreground">Focus Time</p>
+          </div>
+        </motion.section>
+
         {/* Your Goals */}
         <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center justify-between mb-3">
@@ -127,6 +175,7 @@ const GoalsPage = () => {
                       {goal.title}
                     </span>
                     {goal.description && <p className="text-xs text-muted-foreground">{goal.description}</p>}
+                    <p className="text-[11px] text-muted-foreground mt-1">Target: {formatMinutes(goal.target_minutes)}</p>
                   </div>
                   <button onClick={() => deleteGoal(goal.id)} className="text-muted-foreground hover:text-destructive">
                     <Trash2 className="w-4 h-4" />
@@ -169,6 +218,15 @@ const GoalsPage = () => {
               placeholder="Description (optional)"
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
+              className="h-12 rounded-xl"
+            />
+            <Input
+              type="number"
+              min="5"
+              step="5"
+              placeholder="Target minutes"
+              value={targetMinutes}
+              onChange={(e) => setTargetMinutes(e.target.value)}
               className="h-12 rounded-xl"
             />
             <Button onClick={addGoal} className="w-full h-12 rounded-xl gradient-primary font-bold" disabled={!newTitle.trim()}>

@@ -1,25 +1,12 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, TrendingDown, Clock, Zap, Trophy, Award, Star, Flame, Target, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import WeeklyChart from "@/components/WeeklyChart";
 import AchievementBadge from "@/components/AchievementBadge";
-
-const weeklyData = [
-  { day: "Mon", minutes: 180, goal: 240 },
-  { day: "Tue", minutes: 220, goal: 240 },
-  { day: "Wed", minutes: 150, goal: 240 },
-  { day: "Thu", minutes: 280, goal: 240 },
-  { day: "Fri", minutes: 190, goal: 240 },
-  { day: "Sat", minutes: 310, goal: 240 },
-  { day: "Sun", minutes: 165, goal: 240 },
-];
-
-const stats = [
-  { icon: Clock, label: "Avg Daily", value: "2h 45m", trend: "-15%", positive: true },
-  { icon: Zap, label: "Focus Sessions", value: "23", trend: "+8", positive: true },
-  { icon: Trophy, label: "Goals Met", value: "5/7", trend: "71%", positive: true },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { aggregateUserAnalytics, createEmptyUserAnalytics, formatMinutes } from "@/lib/analytics";
 
 const achievements = [
   { icon: Flame, title: "7-Day Streak", unlocked: true },
@@ -30,6 +17,54 @@ const achievements = [
 ];
 
 const StatsPage = () => {
+  const [analytics, setAnalytics] = useState(() => createEmptyUserAnalytics());
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const [sessionsRes, goalsRes] = await Promise.all([
+        supabase.from("focus_sessions").select("created_at, duration, completed").order("created_at", { ascending: false }),
+        supabase.from("goals").select("created_at, completed, target_minutes").order("created_at", { ascending: false }),
+      ]);
+
+      setAnalytics(aggregateUserAnalytics(sessionsRes.data || [], goalsRes.data || [], 240));
+    };
+
+    loadStats();
+  }, []);
+
+  const stats = useMemo(() => [
+    {
+      icon: Clock,
+      label: "Avg Daily",
+      value: formatMinutes(analytics.averageDailyMinutes),
+      trend: `${analytics.weekOverWeekChange > 0 ? "+" : ""}${analytics.weekOverWeekChange}%`,
+      positive: analytics.weekOverWeekChange >= 0,
+    },
+    {
+      icon: Zap,
+      label: "Focus Sessions",
+      value: `${analytics.totalSessions}`,
+      trend: `${analytics.currentStreak} day streak`,
+      positive: analytics.currentStreak >= 0,
+    },
+    {
+      icon: Trophy,
+      label: "Goals Met",
+      value: `${analytics.completedGoals}/${analytics.totalGoals || 0}`,
+      trend: `${analytics.goalCompletionRate}%`,
+      positive: analytics.goalCompletionRate >= 50,
+    },
+  ], [analytics]);
+
+  const weeklyData = analytics.weeklyData;
+  const unlockedCount = Math.min(achievements.length, [
+    analytics.currentStreak >= 7,
+    analytics.weeklyData.some((item) => item.count > 0),
+    analytics.completedGoals >= 1,
+    analytics.totalMinutes >= 600,
+    analytics.goalCompletionRate >= 75,
+  ].filter(Boolean).length);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -67,11 +102,11 @@ const StatsPage = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">This Week</p>
-              <p className="text-2xl font-bold text-foreground">Great Progress! 🎉</p>
+              <p className="text-2xl font-bold text-foreground">{analytics.weekOverWeekChange >= 0 ? "Steady progress" : "Needs a reset"}</p>
             </div>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You reduced your screen time by <span className="text-success font-semibold">15%</span> compared to last week. Keep up the amazing work!
+            You logged <span className="text-foreground font-semibold">{formatMinutes(analytics.totalMinutes)}</span> of focus time overall, and this week changed by <span className="text-primary font-semibold">{analytics.weekOverWeekChange}%</span> versus the previous week.
           </p>
         </motion.div>
 
@@ -124,7 +159,7 @@ const StatsPage = () => {
                 <AchievementBadge
                   icon={achievement.icon}
                   title={achievement.title}
-                  unlocked={achievement.unlocked}
+                  unlocked={index < unlockedCount ? true : achievement.unlocked && unlockedCount > index}
                   progress={achievement.progress}
                 />
               </motion.div>
@@ -141,7 +176,7 @@ const StatsPage = () => {
         >
           <h3 className="text-sm font-bold text-foreground mb-2">🧠 AI Insight</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You're most productive in the <span className="text-primary font-semibold">morning hours</span>. Try scheduling your important study sessions between 9 AM and 12 PM for best focus.
+            Your best recent day was <span className="text-primary font-semibold">{analytics.bestDay}</span>, with an average session length of <span className="text-foreground font-semibold">{formatMinutes(analytics.averageSessionLength)}</span>. Focus consistency will improve fastest if you keep one completed session every day.
           </p>
         </motion.div>
       </main>

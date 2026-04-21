@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Users, Activity, Shield, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
+import { toDateKey } from "@/lib/analytics";
 
 const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,7 @@ const AdminAnalytics = () => {
       const sessionMap: Record<string, { count: number; minutes: number }> = {};
       let totalMins = 0;
       let completed = 0;
-      sessions.forEach((s: any) => {
+      sessions.forEach((s: { created_at: string; duration: number | null; completed: boolean | null }) => {
         const day = new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
         if (!sessionMap[day]) sessionMap[day] = { count: 0, minutes: 0 };
         sessionMap[day].count += 1;
@@ -46,13 +47,26 @@ const AdminAnalytics = () => {
       // Login trends
       const logins = loginsRes.data || [];
       const loginMap: Record<string, { success: number; failed: number }> = {};
-      logins.forEach((l: any) => {
+      logins.forEach((l: { created_at: string; success: boolean | null }) => {
         const day = new Date(l.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
         if (!loginMap[day]) loginMap[day] = { success: 0, failed: 0 };
         if (l.success) loginMap[day].success++;
         else loginMap[day].failed++;
       });
       setLoginData(Object.entries(loginMap).map(([date, d]) => ({ date, ...d })).slice(-14));
+
+      if (sessions.length > 0) {
+        const exactByDay = new Map<string, { date: string; count: number; minutes: number }>();
+        sessions.forEach((session: { created_at: string; duration: number | null }) => {
+          const key = toDateKey(session.created_at);
+          const label = new Date(session.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          const current = exactByDay.get(key) || { date: label, count: 0, minutes: 0 };
+          current.count += 1;
+          current.minutes += session.duration || 0;
+          exactByDay.set(key, current);
+        });
+        setSessionData(Array.from(exactByDay.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value).slice(-14));
+      }
 
       setTotals({
         users: profiles.length,
