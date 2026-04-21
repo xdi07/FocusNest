@@ -10,7 +10,7 @@ interface FocusTimerProps {
 }
 
 const FocusTimer = ({ 
-  initialMinutes = 25, 
+   initialMinutes = 60, 
   breakMinutes = 5,
   onComplete 
 }: FocusTimerProps) => {
@@ -25,7 +25,7 @@ const FocusTimer = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+     return `${mins.toString().padStart(2, "0")}.${secs.toString().padStart(2, "0")}`;
   };
 
   const handleComplete = useCallback(() => {

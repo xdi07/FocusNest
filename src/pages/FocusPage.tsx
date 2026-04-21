@@ -11,8 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 const focusModes = [
   { label: "Quick", minutes: 10 },
-  { label: "Focus", minutes: 25 },
-  { label: "Deep", minutes: 50 },
+   { label: "Focus", minutes: 60 },
+   { label: "Deep", minutes: 60 },
   { label: "Custom", minutes: 0 },
 ];
 
@@ -27,7 +27,7 @@ const FocusPage = () => {
 
     // Save session to database
     if (user) {
-      const duration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 25);
+       const duration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 60);
       await supabase.from("focus_sessions").insert({
         user_id: user.id,
         duration,
@@ -36,7 +36,7 @@ const FocusPage = () => {
     }
   };
 
-  const effectiveDuration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 25);
+   const effectiveDuration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 60);
 
   return (
     <div className="min-h-screen bg-background pb-24">
