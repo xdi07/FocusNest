@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target } from "lucide-react";
+import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
