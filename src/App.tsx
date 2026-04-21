@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { FaceDetectionProvider } from "@/contexts/FaceDetectionContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
@@ -34,32 +33,30 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
-          <FaceDetectionProvider checkInterval={10000}>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Onboarding />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/focus" element={<ProtectedRoute><FocusPage /></ProtectedRoute>} />
-              <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
-              <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/login-attempts" element={<ProtectedRoute><LoginAttemptsPage /></ProtectedRoute>} />
-              <Route path="/admin/login" element={<AdminLoginPage />} />
-              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                <Route index element={<AdminOverview />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="users/:userId" element={<AdminUserDetail />} />
-                <Route path="logins" element={<AdminLogins />} />
-                <Route path="sessions" element={<AdminSessions />} />
-                <Route path="announcements" element={<AdminAnnouncements />} />
-                <Route path="settings" element={<AdminSettings />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </FaceDetectionProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Onboarding />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/focus" element={<ProtectedRoute><FocusPage /></ProtectedRoute>} />
+            <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
+            <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/login-attempts" element={<ProtectedRoute><LoginAttemptsPage /></ProtectedRoute>} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route index element={<AdminOverview />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="users/:userId" element={<AdminUserDetail />} />
+              <Route path="logins" element={<AdminLogins />} />
+              <Route path="sessions" element={<AdminSessions />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
