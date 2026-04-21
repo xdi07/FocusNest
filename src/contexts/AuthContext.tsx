@@ -144,13 +144,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return;
-    await supabase.from("profiles").update(updates).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+    if (error) throw error;
     await fetchProfile(user.id);
   };
 
   const updateSettings = async (updates: Partial<UserSettings>) => {
     if (!user) return;
-    await supabase.from("user_settings").update(updates).eq("id", user.id);
+    const { error } = await supabase.from("user_settings").update(updates).eq("id", user.id);
+    if (error) throw error;
     await fetchSettings(user.id);
   };
 
