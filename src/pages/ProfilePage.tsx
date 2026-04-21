@@ -1,11 +1,11 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Bell, Moon, Sun, Shield, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import FaceDetectionControl from "@/components/FaceDetectionControl";
-import BlurredContent from "@/components/BlurredContent";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { aggregateUserAnalytics, createEmptyUserAnalytics, formatMinutes } from "@/lib/analytics";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +18,29 @@ const ProfilePage = () => {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const [savingName, setSavingName] = useState(false);
+  const [analytics, setAnalytics] = useState(() => createEmptyUserAnalytics());
+
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      if (!user) return;
+
+      const [sessionsRes, goalsRes] = await Promise.all([
+        supabase.from("focus_sessions").select("created_at, duration, completed").order("created_at", { ascending: false }),
+        supabase.from("goals").select("created_at, completed, target_minutes").order("created_at", { ascending: false }),
+      ]);
+
+      setAnalytics(
+        aggregateUserAnalytics(
+          sessionsRes.data || [],
+          goalsRes.data || [],
+          (settings?.focus_duration ?? 25) * 4,
+        ),
+      );
+    };
+
+    loadAnalytics();
+  }, [user, settings?.focus_duration]);
 
   const handleLogout = async () => {
     await signOut();
@@ -26,11 +49,19 @@ const ProfilePage = () => {
   };
 
   const handleSaveName = async () => {
-    if (newName.trim()) {
-      await updateProfile({ display_name: newName.trim() });
+    const trimmedName = newName.trim();
+    if (!trimmedName || savingName) return;
+
+    setSavingName(true);
+    try {
+      await updateProfile({ display_name: trimmedName });
       toast.success("Name updated!");
+      setEditingName(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update your name");
+    } finally {
+      setSavingName(false);
     }
-    setEditingName(false);
   };
 
   const handleToggleDarkMode = async () => {
@@ -91,8 +122,8 @@ const ProfilePage = () => {
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
               />
-              <button onClick={handleSaveName} className="text-success"><Check className="w-5 h-5" /></button>
-              <button onClick={() => setEditingName(false)} className="text-destructive"><X className="w-5 h-5" /></button>
+              <button onClick={handleSaveName} disabled={savingName} className="text-success disabled:opacity-50"><Check className="w-5 h-5" /></button>
+              <button onClick={() => setEditingName(false)} disabled={savingName} className="text-destructive disabled:opacity-50"><X className="w-5 h-5" /></button>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
@@ -107,31 +138,40 @@ const ProfilePage = () => {
 
           <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
             <div>
-              <p className="text-2xl font-bold text-foreground">7</p>
+              <p className="text-2xl font-bold text-foreground">{analytics.currentStreak}</p>
               <p className="text-xs text-muted-foreground">Day Streak</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">23</p>
+              <p className="text-2xl font-bold text-foreground">{analytics.totalSessions}</p>
               <p className="text-xs text-muted-foreground">Sessions</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-warning">🏆 350</p>
-              <p className="text-xs text-muted-foreground">Points</p>
+              <p className="text-2xl font-bold text-foreground">{analytics.completedGoals}</p>
+              <p className="text-xs text-muted-foreground">Goals Done</p>
             </div>
           </div>
         </motion.div>
 
-        <FaceDetectionControl />
-
-        {/* Premium Banner */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} whileHover={{ scale: 1.02 }} className="gradient-focus rounded-2xl p-5 text-center cursor-pointer">
-          <p className="text-primary-foreground font-bold text-lg">✨ Upgrade to Premium</p>
-          <p className="text-primary-foreground/80 text-sm mt-1">Unlock AI insights, advanced analytics & more</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-3 gap-3">
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Activity className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{formatMinutes(analytics.averageSessionLength)}</p>
+            <p className="text-xs text-muted-foreground">Avg Session</p>
+          </div>
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Target className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{analytics.goalCompletionRate}%</p>
+            <p className="text-xs text-muted-foreground">Goal Rate</p>
+          </div>
+          <div className="bg-card rounded-2xl p-4 border border-border/50 text-center">
+            <Trophy className="w-5 h-5 text-primary mx-auto mb-2" />
+            <p className="text-lg font-bold text-foreground">{analytics.bestDay}</p>
+            <p className="text-xs text-muted-foreground">Best Day</p>
+          </div>
         </motion.div>
 
         {/* Menu Items */}
-        <BlurredContent>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden">
             {/* Notifications */}
             <div className="w-full flex items-center gap-4 p-4 border-b border-border">
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
@@ -152,18 +192,6 @@ const ProfilePage = () => {
               <div className="flex-1">
                 <p className="font-semibold text-foreground">Appearance</p>
                 <p className="text-xs text-muted-foreground">{settings?.dark_mode ? "Dark mode" : "Light mode"}</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-
-            {/* App Blocking */}
-            <button onClick={() => toast.info("App blocking coming soon!")} className="w-full flex items-center gap-4 p-4 border-b border-border text-left hover:bg-muted/50 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-secondary-foreground" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-foreground">App Blocking</p>
-                <p className="text-xs text-muted-foreground">Manage blocked apps</p>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -203,12 +231,10 @@ const ProfilePage = () => {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
-          </motion.div>
-        </BlurredContent>
+        </motion.div>
 
         {/* Logout */}
-        <BlurredContent>
-          <motion.button
+        <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -219,8 +245,7 @@ const ProfilePage = () => {
           >
             <LogOut className="w-5 h-5" />
             Log Out
-          </motion.button>
-        </BlurredContent>
+        </motion.button>
 
         <p className="text-center text-xs text-muted-foreground">FocusNest v1.0.0</p>
       </main>
