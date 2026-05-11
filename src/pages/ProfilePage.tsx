@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield } from "lucide-react";
+import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield, CheckCircle, XCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,8 @@ const ProfilePage = () => {
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
   const [analytics, setAnalytics] = useState(() => createEmptyUserAnalytics());
+  const [attempts, setAttempts] = useState<Array<{ id: string; email: string; success: boolean; user_agent: string | null; created_at: string }>>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(true);
 
   useEffect(() => {
     const loadAnalytics = async () => {
@@ -41,6 +43,24 @@ const ProfilePage = () => {
 
     loadAnalytics();
   }, [user, settings?.focus_duration]);
+
+  useEffect(() => {
+    const fetchAttempts = async () => {
+      const { data } = await supabase
+        .from("login_attempts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data) setAttempts(data as typeof attempts);
+      setAttemptsLoading(false);
+    };
+    fetchAttempts();
+  }, []);
+
+  const formatAttemptDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -208,18 +228,6 @@ const ProfilePage = () => {
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
 
-            {/* Login Attempts */}
-            <Link to="/login-attempts" className="w-full flex items-center gap-4 p-4 border-b border-border text-left hover:bg-muted/50 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-secondary-foreground" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-foreground">Login Attempts</p>
-                <p className="text-xs text-muted-foreground">View all login activity</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </Link>
-
             {/* Help */}
             <button onClick={() => setActiveDialog("help")} className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors">
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
@@ -231,6 +239,50 @@ const ProfilePage = () => {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
+        </motion.div>
+
+        {/* Login Attempts */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="bg-card rounded-2xl shadow-card border border-border/50 p-4 space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Login Attempts</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Recent login & signup attempts</p>
+
+          {attemptsLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : attempts.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-6">No login attempts yet.</p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {attempts.map((attempt) => (
+                <div key={attempt.id} className="p-3 rounded-xl bg-muted/40 border border-border/50 flex items-start gap-3">
+                  {attempt.success ? (
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">{attempt.email}</p>
+                    <p className="text-xs text-muted-foreground">{formatAttemptDate(attempt.created_at)}</p>
+                    {attempt.user_agent && (
+                      <p className="text-xs text-muted-foreground/70 mt-1 truncate">{attempt.user_agent}</p>
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-lg ${attempt.success ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"}`}>
+                    {attempt.success ? "Success" : "Failed"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Logout */}
