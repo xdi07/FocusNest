@@ -18,6 +18,7 @@ const focusModes = [
 
 const FocusPage = () => {
   const [selectedMode, setSelectedMode] = useState(1);
+  const [customMinutes, setCustomMinutes] = useState(30);
   const [showBreakSuggestion, setShowBreakSuggestion] = useState(false);
   const { user, settings } = useAuth();
 
