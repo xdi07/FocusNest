@@ -106,6 +106,21 @@ const ProfilePage = () => {
     setActiveDialog(null);
   };
 
+  const dailyLimit = settings?.daily_limit_minutes ?? 120;
+  const [draftLimit, setDraftLimit] = useState<number>(dailyLimit);
+
+  useEffect(() => {
+    setDraftLimit(dailyLimit);
+  }, [dailyLimit]);
+
+  const handleSaveDailyLimit = async () => {
+    if (draftLimit === dailyLimit) return;
+    await updateSettings({ daily_limit_minutes: draftLimit });
+    toast.success(`Daily app limit set to ${draftLimit} minutes`);
+  };
+
+  const usagePct = Math.min(100, Math.round((usageMinutes / Math.max(1, dailyLimit)) * 100));
+
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     : "Recently";
