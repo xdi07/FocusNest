@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield, CheckCircle, XCircle, Hourglass } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,9 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { useUsageGuard } from "@/contexts/UsageGuardContext";
 
 const ProfilePage = () => {
   const { user, profile, settings, signOut, updateProfile, updateSettings } = useAuth();
+  const { minutes: usageMinutes } = useUsageGuard();
   const navigate = useNavigate();
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
