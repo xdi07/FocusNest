@@ -64,23 +64,44 @@ const FocusPage = () => {
 
       <main className="px-4 py-8 max-w-md mx-auto space-y-8">
         {/* Mode Selector */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center gap-2">
-          {focusModes.map((mode, index) => (
-            <motion.button
-              key={mode.label}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedMode(index)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                selectedMode === index
-                  ? "gradient-primary text-primary-foreground shadow-glow"
-                  : "bg-secondary text-secondary-foreground"
-              }`}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3">
+          <div className="flex justify-center gap-2">
+            {focusModes.map((mode, index) => (
+              <motion.button
+                key={mode.label}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedMode(index)}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  selectedMode === index
+                    ? "gradient-primary text-primary-foreground shadow-glow"
+                    : "bg-secondary text-secondary-foreground"
+                }`}
+              >
+                {mode.label}
+                {mode.minutes > 0 && <span className="ml-1 opacity-70">{mode.minutes}m</span>}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Custom Duration Input */}
+          {selectedMode === 3 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="flex items-center gap-2"
             >
-              {mode.label}
-              {mode.minutes > 0 && <span className="ml-1 opacity-70">{mode.minutes}m</span>}
-            </motion.button>
-          ))}
+              <input
+                type="number"
+                min={1}
+                max={180}
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(Math.max(1, Math.min(180, parseInt(e.target.value) || 1)))}
+                className="w-20 px-3 py-2 rounded-xl bg-secondary text-foreground text-center font-semibold border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-sm text-muted-foreground font-medium">minutes</span>
+            </motion.div>
+          )}
         </motion.div>
 
         <FocusTimer
