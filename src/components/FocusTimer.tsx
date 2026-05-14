@@ -19,6 +19,13 @@ const FocusTimer = ({
   const [isBreak, setIsBreak] = useState(false);
   const [sessions, setSessions] = useState(0);
 
+  // Reset timer when initialMinutes changes
+  useEffect(() => {
+    setIsRunning(false);
+    setIsBreak(false);
+    setTimeLeft(initialMinutes * 60);
+  }, [initialMinutes]);
+
   const totalTime = isBreak ? breakMinutes * 60 : initialMinutes * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
