@@ -246,6 +246,36 @@ const ProfilePage = () => {
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
 
+            {/* Daily App Limit */}
+            <div className="w-full p-4 border-b border-border space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <Hourglass className="w-5 h-5 text-secondary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Daily app limit</p>
+                  <p className="text-xs text-muted-foreground">
+                    {usageMinutes}m of {draftLimit}m used today
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-primary tabular-nums">{draftLimit}m</span>
+              </div>
+              <Slider
+                min={15}
+                max={240}
+                step={5}
+                value={[draftLimit]}
+                onValueChange={(v) => setDraftLimit(v[0])}
+                onValueCommit={handleSaveDailyLimit}
+              />
+              <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                <div
+                  className={`h-full transition-all ${usagePct >= 100 ? "bg-destructive" : "gradient-primary"}`}
+                  style={{ width: `${usagePct}%` }}
+                />
+              </div>
+            </div>
+
             {/* Help */}
             <button onClick={() => setActiveDialog("help")} className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors">
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
