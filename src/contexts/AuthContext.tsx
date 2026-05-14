@@ -32,6 +32,9 @@ interface UserSettings {
   notifications_enabled: boolean;
   focus_duration: number;
   break_duration: number;
+  daily_limit_minutes: number;
+  daily_usage_minutes: number;
+  last_usage_date: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

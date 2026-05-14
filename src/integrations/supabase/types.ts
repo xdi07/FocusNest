@@ -201,27 +201,36 @@ export type Database = {
         Row: {
           break_duration: number
           created_at: string
+          daily_limit_minutes: number
+          daily_usage_minutes: number
           dark_mode: boolean
           focus_duration: number
           id: string
+          last_usage_date: string | null
           notifications_enabled: boolean
           updated_at: string
         }
         Insert: {
           break_duration?: number
           created_at?: string
+          daily_limit_minutes?: number
+          daily_usage_minutes?: number
           dark_mode?: boolean
           focus_duration?: number
           id: string
+          last_usage_date?: string | null
           notifications_enabled?: boolean
           updated_at?: string
         }
         Update: {
           break_duration?: number
           created_at?: string
+          daily_limit_minutes?: number
+          daily_usage_minutes?: number
           dark_mode?: boolean
           focus_duration?: number
           id?: string
+          last_usage_date?: string | null
           notifications_enabled?: boolean
           updated_at?: string
         }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Settings, Bell, Moon, Sun, HelpCircle, LogOut, ChevronRight, User, Edit2, Check, X, Trophy, Activity, Target, Shield, CheckCircle, XCircle, Hourglass } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,9 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { useUsageGuard } from "@/contexts/UsageGuardContext";
 
 const ProfilePage = () => {
   const { user, profile, settings, signOut, updateProfile, updateSettings } = useAuth();
+  const { minutes: usageMinutes } = useUsageGuard();
   const navigate = useNavigate();
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
@@ -102,6 +105,21 @@ const ProfilePage = () => {
     toast.success(`Focus duration set to ${minutes} minutes`);
     setActiveDialog(null);
   };
+
+  const dailyLimit = settings?.daily_limit_minutes ?? 120;
+  const [draftLimit, setDraftLimit] = useState<number>(dailyLimit);
+
+  useEffect(() => {
+    setDraftLimit(dailyLimit);
+  }, [dailyLimit]);
+
+  const handleSaveDailyLimit = async () => {
+    if (draftLimit === dailyLimit) return;
+    await updateSettings({ daily_limit_minutes: draftLimit });
+    toast.success(`Daily app limit set to ${draftLimit} minutes`);
+  };
+
+  const usagePct = Math.min(100, Math.round((usageMinutes / Math.max(1, dailyLimit)) * 100));
 
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })
@@ -227,6 +245,36 @@ const ProfilePage = () => {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
+
+            {/* Daily App Limit */}
+            <div className="w-full p-4 border-b border-border space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <Hourglass className="w-5 h-5 text-secondary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">Daily app limit</p>
+                  <p className="text-xs text-muted-foreground">
+                    {usageMinutes}m of {draftLimit}m used today
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-primary tabular-nums">{draftLimit}m</span>
+              </div>
+              <Slider
+                min={15}
+                max={240}
+                step={5}
+                value={[draftLimit]}
+                onValueChange={(v) => setDraftLimit(v[0])}
+                onValueCommit={handleSaveDailyLimit}
+              />
+              <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                <div
+                  className={`h-full transition-all ${usagePct >= 100 ? "bg-destructive" : "gradient-primary"}`}
+                  style={{ width: `${usagePct}%` }}
+                />
+              </div>
+            </div>
 
             {/* Help */}
             <button onClick={() => setActiveDialog("help")} className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/50 transition-colors">
