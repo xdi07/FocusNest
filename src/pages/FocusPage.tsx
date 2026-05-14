@@ -28,7 +28,7 @@ const FocusPage = () => {
 
     // Save session to database
     if (user) {
-       const duration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 60);
+      const duration = focusModes[selectedMode].minutes || customMinutes;
       await supabase.from("focus_sessions").insert({
         user_id: user.id,
         duration,
@@ -37,7 +37,7 @@ const FocusPage = () => {
     }
   };
 
-   const effectiveDuration = focusModes[selectedMode].minutes || (settings?.focus_duration ?? 60);
+  const effectiveDuration = focusModes[selectedMode].minutes || customMinutes;
 
   return (
     <div className="min-h-screen bg-background pb-24">
